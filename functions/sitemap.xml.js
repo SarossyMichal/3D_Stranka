@@ -5,7 +5,7 @@ export async function onRequestGet({ request, env }) {
   const origin = new URL(request.url).origin;
   const urls = publicPages.map((path) => `${origin}${path}`);
   if (env.DB) {
-    const result = await env.DB.prepare("SELECT slug FROM products WHERE status = 'published'").all();
+    const result = await env.DB.prepare("SELECT slug FROM products WHERE status = 'published' AND (stock IS NULL OR stock > 0)").all();
     for (const product of result.results || []) urls.push(`${origin}/produkt.html?slug=${encodeURIComponent(product.slug)}`);
   }
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((url) => `<url><loc>${xmlEscape(url)}</loc></url>`).join('')}</urlset>`;

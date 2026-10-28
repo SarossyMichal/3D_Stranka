@@ -1,4 +1,5 @@
 import { clean, noStoreHeaders } from './admin/_products.js';
+import { clientHash } from './_shop.js';
 
 const maxBodyBytes = 16000;
 const perClientHourlyLimit = 5;
@@ -6,13 +7,6 @@ const totalHourlyLimit = 60;
 
 function json(data, status = 200) {
   return Response.json(data, { status, headers: noStoreHeaders() });
-}
-
-async function clientHash(request) {
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const day = new Date().toISOString().slice(0, 10);
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${ip}|${day}|tvoj-vytlacok`));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 function readInquiry(input) {

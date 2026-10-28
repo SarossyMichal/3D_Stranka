@@ -13,12 +13,25 @@ export function readProduct(input) {
   const dimensions = clean(value.dimensions, 120);
   const variants = Array.isArray(value.variants) ? value.variants.map((item) => clean(item, 80)).filter(Boolean).slice(0, 20) : [];
   const status = allowedStatuses.has(value.status) ? value.status : 'draft';
+  const priceCents = readWhole(value.price_cents, 'Cena', 1000000);
+  const stock = readWhole(value.stock, 'Počet kusov', 100000);
 
   if (!name || !slug || !category || !description) throw new Error('Vyplň názov, URL názov, kategóriu a popis.');
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('URL názov môže obsahovať iba malé písmená, čísla a spojovníky.');
   if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('https://')) throw new Error('Obrázok musí mať adresu HTTPS alebo cestu od koreňa webu.');
 
-  return { name, slug, category, description, priceText, availabilityText, variants, imageUrl, material, dimensions, status };
+  return {
+    name, slug, category, description, availabilityText, variants, imageUrl, material, dimensions, status, priceCents, stock,
+    priceText: priceCents === null ? priceText : `${(priceCents / 100).toFixed(2).replace('.', ',')} €`,
+  };
+}
+
+// Empty means "not set" (null); otherwise a whole number from 0 up to max.
+function readWhole(value, label, max) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 0 || number > max) throw new Error(`${label} musí byť celé nezáporné číslo.`);
+  return number;
 }
 
 export function clean(value, maxLength) {

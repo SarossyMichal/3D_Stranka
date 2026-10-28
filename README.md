@@ -77,6 +77,21 @@ V spodnej časti adminu je zoznam **Dopyty z webu**. Formulár na `dopyt.html` i
 
 Fotky sa nahrávajú priamo v admine: pri produkte tlačidlom **Vybrať fotku** a na úvodnú stránku v sekcii **Ukážky prác**. Prehliadač fotku zmenší na najviac 1600 px (JPG), uloží ju do tabuľky `images` v D1 (migrácia `0004_images.sql`) a web ju zobrazuje na adrese `/img/<id>`. Sekcia ukážok sa na úvodnej stránke ukáže až po pridaní prvej fotky.
 
+### Objednávky na dobierku
+
+Košík (`kosik.html`, `kosik.js`) posiela objednávky na `/api/orders`. Server prepočíta ceny z databázy, skontroluje sklad a kusy odpočíta (migrácia `0005_orders.sql` pridala `price_cents`, `stock` a tabuľku `orders`). Produkt s 0 kusmi sa v e-shope nezobrazí; prázdny sklad znamená výrobu na objednávku bez limitu. Zrušenie objednávky v admine vráti kusy na sklad.
+
+Ceny dopravy a dobierky sú v `functions/api/_shop.js`.
+
+E-mail o novej objednávke posiela služba [Resend](https://resend.com) (bezplatný účet, bez karty). V Cloudflare nastav dve tajomstvá:
+
+```
+npx wrangler pages secret put RESEND_API_KEY --project-name tvoj-vytlacok
+npx wrangler pages secret put ORDER_NOTIFY_EMAIL --project-name tvoj-vytlacok
+```
+
+`ORDER_NOTIFY_EMAIL` musí byť e-mail, ktorým si sa zaregistroval v Resend (bez vlastnej domény posiela Resend iba na tento e-mail). Bez týchto tajomstiev sa objednávky ukladajú normálne, len neprídu e-mailom.
+
 Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE`) a funguje len na adrese `localhost` / `127.0.0.1`. Server počúva iba na tvojom počítači, nie v sieti.
 
 ### Čo je pripravené

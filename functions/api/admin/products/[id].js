@@ -8,8 +8,8 @@ export async function onRequestPut({ request, env, params }) {
   if (!env.DB) return json({ error: 'Databáza D1 ešte nie je pripojená.' }, 503);
   try {
     const product = readProduct(await request.json());
-    const result = await env.DB.prepare(`UPDATE products SET slug = ?, name = ?, category = ?, description = ?, price_text = ?, availability_text = ?, variants_json = ?, image_url = ?, material = ?, dimensions = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
-      .bind(product.slug, product.name, product.category, product.description, product.priceText, product.availabilityText, JSON.stringify(product.variants), product.imageUrl, product.material, product.dimensions, product.status, params.id).run();
+    const result = await env.DB.prepare(`UPDATE products SET slug = ?, name = ?, category = ?, description = ?, price_text = ?, availability_text = ?, variants_json = ?, image_url = ?, material = ?, dimensions = ?, status = ?, price_cents = ?, stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+      .bind(product.slug, product.name, product.category, product.description, product.priceText, product.availabilityText, JSON.stringify(product.variants), product.imageUrl, product.material, product.dimensions, product.status, product.priceCents, product.stock, params.id).run();
     if (!result.meta?.changes) return json({ error: 'Produkt sa nenašiel.' }, 404);
     return json({ id: params.id, slug: product.slug, status: product.status });
   } catch (error) {

@@ -35,14 +35,14 @@
             <label class="field"><span>URL názov <b>*</b></span><input name="slug" required maxlength="90" pattern="[a-zA-Z0-9-]+" placeholder="drziak-na-sluchadla"><small>Vytvorí sa automaticky z názvu.</small></label>
             <label class="field"><span>Materiál</span><input name="material" maxlength="100" placeholder="Doplň iba ak ho poznáš"></label>
             <label class="field"><span>Približné rozmery</span><input name="dimensions" maxlength="120" placeholder="Napríklad: 12 × 8 × 5 cm"></label>
-            <label class="field"><span>Cena</span><input name="price_text" maxlength="80" placeholder="Cena na doplnenie"></label>
+            <label class="field"><span>Cena v €</span><input name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Napríklad 12,90"><small>Prázdne = cena na dopyt, produkt sa nedá objednať.</small></label><label class="field"><span>Kusov na sklade</span><input name="stock" type="number" min="0" step="1" inputmode="numeric" placeholder="Prázdne = vyrábame na objednávku"><small>Pri 0 sa produkt z e-shopu skryje. Objednávky kusy odpočítajú.</small></label>
             <label class="field"><span>Dostupnosť</span><input name="availability_text" maxlength="100" placeholder="Dostupnosť na potvrdenie"></label>
             <label class="field field-wide"><span>Varianty <small>každý na samostatný riadok</small></span><textarea name="variants" rows="3" maxlength="500" placeholder="Modrá\nBiela"></textarea></label>
             <div class="field field-wide photo-field"><span>Fotka produktu</span><div class="photo-picker"><img id="product-photo-preview" alt="" hidden><label class="button photo-button">Vybrať fotku<input id="product-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button class="text-button" type="button" id="remove-photo" hidden>Odstrániť fotku</button></div><input name="image_url" type="hidden"><small>Fotka sa zmenší na najviac 1600 px a uloží do databázy webu.</small></div>
             <label class="field field-wide"><span>Fakty pre Grok <b>*</b></span><textarea name="notes" rows="4" maxlength="2400" placeholder="Na čo výrobok slúži? Čím je zaujímavý? Uveď iba informácie, ktoré vieš potvrdiť." required></textarea><small>Grok použije iba to, čo sem alebo do polí vyššie napíšeš.</small></label>
             <div class="field field-wide ai-actions"><button id="generate-copy" class="button button-ai" type="button"><span aria-hidden="true">✦</span> Navrhnúť popis s Grokom</button><span id="ai-model-note">Model: grok-4.3 · môže sa meniť podľa nastavenia</span><small>Po kliknutí sa len fakty o produkte odošlú xAI na vytvorenie návrhu.</small></div>
             <label class="field field-wide"><span>Popis na stránke <b>*</b></span><textarea name="description" rows="6" maxlength="3000" required placeholder="Sem príde AI návrh. Pred uložením ho môžeš upraviť."></textarea></label>
-            <label class="field field-wide status-field"><span>Stav</span><select name="status"><option value="draft">Koncept — zatiaľ nezverejnený</option><option value="published">Zverejniť v e-shope</option><option value="archived">Archivovaný</option></select><small>Zverejnený produkt sa zobrazí vo verejnom obchode. Objednávky ešte nie sú aktívne.</small></label>
+            <label class="field field-wide status-field"><span>Stav</span><select name="status"><option value="draft">Koncept — zatiaľ nezverejnený</option><option value="published">Zverejniť v e-shope</option><option value="archived">Archivovaný</option></select><small>Zverejnený produkt sa zobrazí v e-shope a dá sa objednať, ak má cenu.</small></label>
           </div>
           <div class="form-footer"><span>Pole označené * treba vyplniť.</span><button class="button button-primary" type="submit">Uložiť produkt <span aria-hidden="true">↗</span></button></div>
         </form>
@@ -54,6 +54,11 @@
         <div class="catalog-footnote"><span aria-hidden="true">🔒</span><p>Produkty ukladáme do tvojej Cloudflare databázy. Kým nie je pripojená, stránka zobrazí návod na nastavenie.</p></div>
       </aside>
     </div>
+
+    <section class="panel inquiries-panel" aria-labelledby="orders-heading">
+      <div class="panel-heading"><div><p class="eyebrow">E-SHOP</p><h2 id="orders-heading">Objednávky</h2></div><span id="order-count" class="count-pill">0</span></div>
+      <div id="order-list" class="inquiry-list"><p class="empty-list">Načítavam objednávky…</p></div>
+    </section>
 
     <section class="panel inquiries-panel" aria-labelledby="showcase-heading">
       <div class="panel-heading"><div><p class="eyebrow">ÚVODNÁ STRÁNKA</p><h2 id="showcase-heading">Ukážky prác</h2></div><span id="showcase-count" class="count-pill">0</span></div>

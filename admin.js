@@ -19,7 +19,8 @@ function formData() {
     category: String(data.get('category') || '').trim(),
     material: String(data.get('material') || '').trim(),
     dimensions: String(data.get('dimensions') || '').trim(),
-    price_text: String(data.get('price_text') || '').trim(),
+    price_cents: euroToCents(data.get('price')),
+    stock: String(data.get('stock') || '').trim(),
     availability_text: String(data.get('availability_text') || '').trim(),
     variants: String(data.get('variants') || '').split('\n').map((item) => item.trim()).filter(Boolean),
     image_url: String(data.get('image_url') || '').trim(),
@@ -27,6 +28,15 @@ function formData() {
     description: String(data.get('description') || '').trim(),
     status: String(data.get('status') || 'draft'),
   };
+}
+
+function euroToCents(value) {
+  const text = String(value || '').trim().replace(',', '.');
+  return text === '' ? '' : Math.round(Number(text) * 100);
+}
+
+function formatEuro(cents) {
+  return `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 }
 
 function slugify(value) {
@@ -43,7 +53,7 @@ function renderProducts() {
     list.innerHTML = '<p class="empty-list">Zatiaľ tu nie je žiadny produkt. Začni formulárom.</p>';
     return;
   }
-  list.innerHTML = products.map((product) => `<article class="product-row"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.category)} · ${escapeHtml(product.slug)}</p></div><div class="product-row-actions"><span class="status-pill ${escapeHtml(product.status)}">${statusName(product.status)}</span><button class="edit-button" type="button" data-edit="${escapeHtml(product.id)}">Upraviť</button></div></article>`).join('');
+  list.innerHTML = products.map((product) => `<article class="product-row"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.category)} · ${Number.isInteger(product.price_cents) ? formatEuro(product.price_cents) : 'cena na dopyt'} · ${Number.isInteger(product.stock) ? `${product.stock} ks${product.stock === 0 ? ' (vypredané)' : ''}` : 'na objednávku'}</p></div><div class="product-row-actions"><span class="status-pill ${escapeHtml(product.status)}">${statusName(product.status)}</span><button class="edit-button" type="button" data-edit="${escapeHtml(product.id)}">Upraviť</button></div></article>`).join('');
 }
 
 function escapeHtml(value) {
@@ -186,7 +196,9 @@ list.addEventListener('click', (event) => {
   const product = products.find((item) => item.id === button.dataset.edit);
   if (!product) return;
   form.elements.id.value = product.id;
-  for (const key of ['name', 'slug', 'category', 'material', 'dimensions', 'price_text', 'availability_text', 'image_url', 'description', 'status']) form.elements[key].value = product[key] || '';
+  for (const key of ['name', 'slug', 'category', 'material', 'dimensions', 'availability_text', 'image_url', 'description', 'status']) form.elements[key].value = product[key] || '';
+  form.elements.price.value = Number.isInteger(product.price_cents) ? (product.price_cents / 100).toFixed(2) : '';
+  form.elements.stock.value = Number.isInteger(product.stock) ? String(product.stock) : '';
   showProductPhoto(product.image_url || '');
   try { form.elements.variants.value = JSON.parse(product.variants_json || '[]').join('\n'); } catch { form.elements.variants.value = ''; }
   form.elements.notes.value = '';
@@ -300,6 +312,53 @@ showcaseList.addEventListener('click', async (event) => {
   }
 });
 
+const orderList = document.querySelector('#order-list');
+const orderCount = document.querySelector('#order-count');
+let orders = [];
+const orderStatusNames = { new: 'Nová', sent: 'Odoslaná', done: 'Vybavená', canceled: 'Zrušená' };
+const orderActions = { new: [['sent', 'Odoslané'], ['canceled', 'Zrušiť']], sent: [['done', 'Vybavené'], ['new', 'Späť na nové'], ['canceled', 'Zrušiť']], done: [['sent', 'Späť na odoslané']], canceled: [] };
+const orderPill = { new: 'new', sent: 'published', done: 'handled', canceled: 'archived' };
+
+function renderOrders() {
+  orderCount.textContent = String(orders.filter((order) => order.status === 'new').length);
+  if (!orders.length) {
+    orderList.innerHTML = '<p class="empty-list">Zatiaľ neprišla žiadna objednávka.</p>';
+    return;
+  }
+  orderList.innerHTML = orders.map((order) => {
+    let items = [];
+    try { items = JSON.parse(order.items_json || '[]'); } catch { items = []; }
+    const lines = items.map((item) => `<li>${item.qty} × ${escapeHtml(item.name)}${item.variant ? ` (${escapeHtml(item.variant)})` : ''} — ${formatEuro(item.price_cents * item.qty)}</li>`).join('');
+    const actions = (orderActions[order.status] || []).map(([status, label]) => `<button class="edit-button" type="button" data-order="${escapeHtml(order.id)}" data-status="${status}">${label}</button>`).join('');
+    return `<article class="inquiry-row ${order.status === 'canceled' ? 'archived' : ''}"><div class="inquiry-head"><div><h3>Objednávka ${escapeHtml(order.number)} · ${formatEuro(order.total_cents)} na dobierku</h3><p>${escapeHtml(order.name)} · <a href="mailto:${escapeHtml(order.email)}">${escapeHtml(order.email)}</a> · <a href="tel:${escapeHtml(order.phone)}">${escapeHtml(order.phone)}</a></p></div><span class="status-pill ${orderPill[order.status]}">${orderStatusNames[order.status]}</span></div><ul class="order-items">${lines}</ul><p class="inquiry-meta"><b>Doprava:</b> ${escapeHtml(order.shipping_label)} (${formatEuro(order.shipping_cents)}) · dobierka ${formatEuro(order.cod_cents)}</p>${order.pickup_point ? `<p class="inquiry-meta"><b>Výdajné miesto:</b> ${escapeHtml(order.pickup_point)}</p>` : ''}<p class="inquiry-meta"><b>Adresa:</b> ${escapeHtml(order.street)}, ${escapeHtml(order.zip)} ${escapeHtml(order.city)}</p>${order.note ? `<p class="inquiry-text">${escapeHtml(order.note)}</p>` : ''}<div class="inquiry-head"><p>Prijatá ${escapeHtml(order.created_at)} UTC</p><div class="product-row-actions">${actions}</div></div></article>`;
+  }).join('');
+}
+
+async function loadOrders() {
+  try {
+    const result = await request('/api/admin/orders');
+    orders = result.orders || [];
+    renderOrders();
+  } catch (error) {
+    orderList.innerHTML = `<p class="empty-list">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+orderList.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-order]');
+  if (!button) return;
+  if (button.dataset.status === 'canceled' && !window.confirm('Zrušiť objednávku? Kusy sa vrátia na sklad a zrušenie sa nedá vrátiť.')) return;
+  button.disabled = true;
+  try {
+    await request(`/api/admin/orders/${encodeURIComponent(button.dataset.order)}`, { method: 'PUT', body: JSON.stringify({ status: button.dataset.status }) });
+    await Promise.all([loadOrders(), loadProducts()]);
+  } catch (error) {
+    message(error.message, 'error');
+    button.disabled = false;
+  }
+});
+
+loadOrders();
 loadProducts();
 loadInquiries();
 loadShowcase();
