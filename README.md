@@ -85,14 +85,13 @@ Ceny dopravy a dobierky sú v `functions/api/_shop.js`.
 
 Mapa výdajných miest Packety sa v košíku zapne, keď do `wrangler.jsonc` pod `vars` doplníš `"PACKETA_API_KEY": "tvoj-kľúč"` (kľúč nájdeš v klientskej sekcii Packety). Kľúč pre mapu je verejný, preto môže byť v repozitári. Bez neho zákazník vpíše výdajné miesto ručne. K objednávke sa ukladá aj ID výdajného miesta (migrácia `0006_pickup_point_id.sql`).
 
-E-mail o novej objednávke posiela služba [Resend](https://resend.com) (bezplatný účet, bez karty). V Cloudflare nastav dve tajomstvá:
+Pri každej objednávke odídu dva e-maily cez Gmail tvojvytlacok@gmail.com (`functions/api/_notify.js`, knižnica `worker-mailer`): upozornenie pre teba (odpoveď ide priamo zákazníkovi) a potvrdenie pre zákazníka. Treba na to „heslo pre aplikácie“ z Google účtu (myaccount.google.com/apppasswords, vyžaduje dvojstupňové overenie). Nastav ho ako tajomstvo:
 
 ```
-npx wrangler pages secret put RESEND_API_KEY --project-name tvoj-vytlacok
-npx wrangler pages secret put ORDER_NOTIFY_EMAIL --project-name tvoj-vytlacok
+npx wrangler pages secret put GMAIL_APP_PASSWORD --project-name tvoj-vytlacok
 ```
 
-`ORDER_NOTIFY_EMAIL` musí byť e-mail, ktorým si sa zaregistroval v Resend (bez vlastnej domény posiela Resend iba na tento e-mail). Bez týchto tajomstiev sa objednávky ukladajú normálne, len neprídu e-mailom.
+Pre lokálny admin ho pridaj aj do `.dev.vars` ako `GMAIL_APP_PASSWORD=...`. Tlačidlo „Poslať skúšobný e-mail“ v admine pošle obe ukážky na tvoj Gmail. Bez hesla sa objednávky ukladajú normálne, len e-maily neodídu.
 
 Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE`) a funguje len na adrese `localhost` / `127.0.0.1`. Server počúva iba na tvojom počítači, nie v sieti.
 

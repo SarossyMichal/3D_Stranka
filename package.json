@@ -11,5 +11,8 @@
   "devDependencies": {
     "jose": "^6.1.0",
     "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "worker-mailer": "^1.3.0"
   }
 }

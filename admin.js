@@ -358,6 +358,19 @@ orderList.addEventListener('click', async (event) => {
   }
 });
 
+document.querySelector('#test-email').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const result = await request('/api/admin/test-email', { method: 'POST' });
+    message(`Na ${result.sent} odišli 2 skúšobné e-maily: upozornenie pre teba a potvrdenie, aké dostane zákazník.`, 'success');
+  } catch (error) {
+    message(error.message, 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
+
 loadOrders();
 loadProducts();
 loadInquiries();

@@ -3,10 +3,14 @@
   "name": "tvoj-vytlacok",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-10-28",
+  // Needed by worker-mailer, which sends order e-mails through Gmail.
+  "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "XAI_MODEL": "grok-4.3",
     // Public key for the Packeta pickup-point map (not the API password).
-    "PACKETA_API_KEY": "ab9c886229ff63d6"
+    "PACKETA_API_KEY": "ab9c886229ff63d6",
+    // Order e-mails are sent from and to this Gmail; its app password is the secret GMAIL_APP_PASSWORD.
+    "SHOP_EMAIL": "tvojvytlacok@gmail.com"
   },
   "d1_databases": [{ "binding": "DB", "database_name": "tvoj-vytlacok", "database_id": "a3e275e3-c410-4270-a9d4-f9cf31fd52f3", "remote": true }]
 }
