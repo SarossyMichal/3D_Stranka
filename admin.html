@@ -54,7 +54,12 @@
         <div class="catalog-footnote"><span aria-hidden="true">🔒</span><p>Produkty ukladáme do tvojej Cloudflare databázy. Kým nie je pripojená, stránka zobrazí návod na nastavenie.</p></div>
       </aside>
     </div>
-    <p class="access-note">Táto stránka je určená iba správcovi. Pred zverejnením treba v Cloudflare Access chrániť cestu <code>/admin.html</code> aj <code>/api/admin/*</code>.</p>
+
+    <section class="panel inquiries-panel" aria-labelledby="inquiries-heading">
+      <div class="panel-heading"><div><p class="eyebrow">ZÁKAZNÍCI</p><h2 id="inquiries-heading">Dopyty z webu</h2></div><span id="inquiry-count" class="count-pill">0</span></div>
+      <div id="inquiry-list" class="inquiry-list"><p class="empty-list">Načítavam dopyty…</p></div>
+    </section>
+    <p class="access-note">Táto stránka beží iba v tvojom počítači cez <code>npm run admin</code>. Na verejnom webe sú <code>/admin</code> aj <code>/api/admin/*</code> vypnuté.</p>
   </main>
 </body>
 </html>

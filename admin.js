@@ -143,4 +143,51 @@ list.addEventListener('click', (event) => {
   form.elements.name.focus({ preventScroll: true });
 });
 
+const inquiryList = document.querySelector('#inquiry-list');
+const inquiryCount = document.querySelector('#inquiry-count');
+let inquiries = [];
+
+function inquiryStatusName(status) {
+  return ({ new: 'Nový', handled: 'Vybavený', archived: 'Archív' })[status] || 'Nový';
+}
+
+function renderInquiries() {
+  inquiryCount.textContent = String(inquiries.filter((item) => item.status === 'new').length);
+  if (!inquiries.length) {
+    inquiryList.innerHTML = '<p class="empty-list">Zatiaľ neprišiel žiadny dopyt.</p>';
+    return;
+  }
+  inquiryList.innerHTML = inquiries.map((item) => {
+    const contact = [`<a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>`, item.phone && escapeHtml(item.phone), item.company && escapeHtml(item.company)].filter(Boolean).join(' · ');
+    const meta = [item.quantity && `Počet: ${escapeHtml(item.quantity)}`, item.dimensions && `Rozmery: ${escapeHtml(item.dimensions)}`, item.deadline && `Termín: ${escapeHtml(item.deadline)}`].filter(Boolean).join(' · ');
+    const actions = ['new', 'handled', 'archived'].filter((status) => status !== item.status)
+      .map((status) => `<button class="edit-button" type="button" data-inquiry="${escapeHtml(item.id)}" data-status="${status}">${({ new: 'Označiť ako nový', handled: 'Vybavené', archived: 'Archivovať' })[status]}</button>`).join('');
+    return `<article class="inquiry-row ${escapeHtml(item.status)}"><div class="inquiry-head"><div><h3>${escapeHtml(item.name)}</h3><p>${contact}</p></div><span class="status-pill ${escapeHtml(item.status)}">${inquiryStatusName(item.status)}</span></div><p class="inquiry-text">${escapeHtml(item.description)}</p>${meta ? `<p class="inquiry-meta">${meta}</p>` : ''}<div class="inquiry-head"><p>Prijaté ${escapeHtml(item.created_at)} UTC</p><div class="product-row-actions">${actions}</div></div></article>`;
+  }).join('');
+}
+
+async function loadInquiries() {
+  try {
+    const result = await request('/api/admin/inquiries');
+    inquiries = result.inquiries || [];
+    renderInquiries();
+  } catch (error) {
+    inquiryList.innerHTML = `<p class="empty-list">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+inquiryList.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-inquiry]');
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await request(`/api/admin/inquiries/${encodeURIComponent(button.dataset.inquiry)}`, { method: 'PUT', body: JSON.stringify({ status: button.dataset.status }) });
+    await loadInquiries();
+  } catch (error) {
+    message(error.message, 'error');
+    button.disabled = false;
+  }
+});
+
 loadProducts();
+loadInquiries();

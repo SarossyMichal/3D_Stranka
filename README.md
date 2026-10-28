@@ -73,6 +73,8 @@ Administrácia na verejnom webe je vypnutá: `/admin`, `/admin.html` aj `/api/ad
 3. Spusti `npm run admin` a otvor `http://localhost:8788/admin`.
 4. Po skončení zastav príkaz klávesmi `Ctrl+C`.
 
+V spodnej časti adminu je zoznam **Dopyty z webu**. Formulár na `dopyt.html` ich ukladá do tabuľky `inquiries` (migrácia `0003_inquiries.sql`); každý dopyt môžeš označiť ako vybavený alebo archivovať. Formulár neprijíma prílohy a chráni sa skrytým poľom proti botom a limitom 5 dopytov za hodinu z jednej adresy (spolu najviac 60 za hodinu). Admin dopyty sám neobnovuje, načítaj stránku znova.
+
 Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE`) a funguje len na adrese `localhost` / `127.0.0.1`. Server počúva iba na tvojom počítači, nie v sieti.
 
 ### Čo je pripravené
