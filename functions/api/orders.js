@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       customer.pickup_point = '';
       customer.pickup_point_id = '';
     }
-    if (input?.consent !== true) throw new OrderError('Potvrďte súhlas so spracovaním údajov na vybavenie objednávky.');
+    if (input?.consent !== true) throw new OrderError('Potvrďte, že ste si prečítali obchodné podmienky a informácie o spracovaní údajov.');
 
     const hash = await clientHash(request);
     const recent = await db.prepare(`SELECT SUM(CASE WHEN client_hash = ? THEN 1 ELSE 0 END) AS mine, COUNT(*) AS total
