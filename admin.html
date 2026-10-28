@@ -38,7 +38,7 @@
             <label class="field"><span>Cena</span><input name="price_text" maxlength="80" placeholder="Cena na doplnenie"></label>
             <label class="field"><span>Dostupnosť</span><input name="availability_text" maxlength="100" placeholder="Dostupnosť na potvrdenie"></label>
             <label class="field field-wide"><span>Varianty <small>každý na samostatný riadok</small></span><textarea name="variants" rows="3" maxlength="500" placeholder="Modrá\nBiela"></textarea></label>
-            <label class="field field-wide"><span>Odkaz na obrázok</span><input name="image_url" type="url" maxlength="500" placeholder="https://…"><small>Nahrávanie obrázkov ešte nie je pripojené. Môžeš vložiť bezpečný https odkaz.</small></label>
+            <div class="field field-wide photo-field"><span>Fotka produktu</span><div class="photo-picker"><img id="product-photo-preview" alt="" hidden><label class="button photo-button">Vybrať fotku<input id="product-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button class="text-button" type="button" id="remove-photo" hidden>Odstrániť fotku</button></div><input name="image_url" type="hidden"><small>Fotka sa zmenší na najviac 1600 px a uloží do databázy webu.</small></div>
             <label class="field field-wide"><span>Fakty pre Grok <b>*</b></span><textarea name="notes" rows="4" maxlength="2400" placeholder="Na čo výrobok slúži? Čím je zaujímavý? Uveď iba informácie, ktoré vieš potvrdiť." required></textarea><small>Grok použije iba to, čo sem alebo do polí vyššie napíšeš.</small></label>
             <div class="field field-wide ai-actions"><button id="generate-copy" class="button button-ai" type="button"><span aria-hidden="true">✦</span> Navrhnúť popis s Grokom</button><span id="ai-model-note">Model: grok-4.3 · môže sa meniť podľa nastavenia</span><small>Po kliknutí sa len fakty o produkte odošlú xAI na vytvorenie návrhu.</small></div>
             <label class="field field-wide"><span>Popis na stránke <b>*</b></span><textarea name="description" rows="6" maxlength="3000" required placeholder="Sem príde AI návrh. Pred uložením ho môžeš upraviť."></textarea></label>
@@ -54,6 +54,16 @@
         <div class="catalog-footnote"><span aria-hidden="true">🔒</span><p>Produkty ukladáme do tvojej Cloudflare databázy. Kým nie je pripojená, stránka zobrazí návod na nastavenie.</p></div>
       </aside>
     </div>
+
+    <section class="panel inquiries-panel" aria-labelledby="showcase-heading">
+      <div class="panel-heading"><div><p class="eyebrow">ÚVODNÁ STRÁNKA</p><h2 id="showcase-heading">Ukážky prác</h2></div><span id="showcase-count" class="count-pill">0</span></div>
+      <form id="showcase-form" class="showcase-form">
+        <label class="field"><span>Fotka <b>*</b></span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+        <label class="field"><span>Popis pod fotkou</span><input name="title" maxlength="120" placeholder="Napríklad: Náhradný diel na kávovar"></label>
+        <button class="button button-primary" type="submit">Pridať na úvodnú stránku</button>
+      </form>
+      <div id="showcase-list" class="showcase-list"><p class="empty-list">Načítavam ukážky…</p></div>
+    </section>
 
     <section class="panel inquiries-panel" aria-labelledby="inquiries-heading">
       <div class="panel-heading"><div><p class="eyebrow">ZÁKAZNÍCI</p><h2 id="inquiries-heading">Dopyty z webu</h2></div><span id="inquiry-count" class="count-pill">0</span></div>

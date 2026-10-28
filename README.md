@@ -75,6 +75,8 @@ Administrácia na verejnom webe je vypnutá: `/admin`, `/admin.html` aj `/api/ad
 
 V spodnej časti adminu je zoznam **Dopyty z webu**. Formulár na `dopyt.html` ich ukladá do tabuľky `inquiries` (migrácia `0003_inquiries.sql`); každý dopyt môžeš označiť ako vybavený alebo archivovať. Formulár neprijíma prílohy a chráni sa skrytým poľom proti botom a limitom 5 dopytov za hodinu z jednej adresy (spolu najviac 60 za hodinu). Admin dopyty sám neobnovuje, načítaj stránku znova.
 
+Fotky sa nahrávajú priamo v admine: pri produkte tlačidlom **Vybrať fotku** a na úvodnú stránku v sekcii **Ukážky prác**. Prehliadač fotku zmenší na najviac 1600 px (JPG), uloží ju do tabuľky `images` v D1 (migrácia `0004_images.sql`) a web ju zobrazuje na adrese `/img/<id>`. Sekcia ukážok sa na úvodnej stránke ukáže až po pridaní prvej fotky.
+
 Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE`) a funguje len na adrese `localhost` / `127.0.0.1`. Server počúva iba na tvojom počítači, nie v sieti.
 
 ### Čo je pripravené

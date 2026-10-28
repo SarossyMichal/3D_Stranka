@@ -70,8 +70,60 @@ async function loadProducts() {
   }
 }
 
+// Shrink photos in the browser so they fit comfortably in a D1 row and load fast.
+async function shrinkPhoto(file, maxSide = 1600) {
+  if (!file.type.startsWith('image/')) throw new Error('Vyber fotku vo formáte JPG, PNG alebo WebP.');
+  const bitmap = await createImageBitmap(file).catch(() => { throw new Error('Túto fotku sa nepodarilo otvoriť. Skús JPG alebo PNG.'); });
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.84));
+}
+
+async function uploadPhoto(file) {
+  const blob = await shrinkPhoto(file);
+  const response = await fetch('/api/admin/images', { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || `Fotku sa nepodarilo nahrať (${response.status}).`);
+  return result;
+}
+
+const photoInput = document.querySelector('#product-photo');
+const photoPreview = document.querySelector('#product-photo-preview');
+const removePhoto = document.querySelector('#remove-photo');
+
+function showProductPhoto(url) {
+  form.elements.image_url.value = url || '';
+  photoPreview.hidden = !url;
+  removePhoto.hidden = !url;
+  if (url) photoPreview.src = url; else photoPreview.removeAttribute('src');
+}
+
+photoInput.addEventListener('change', async () => {
+  const file = photoInput.files[0];
+  if (!file) return;
+  message('Zmenšujem a nahrávam fotku…');
+  try {
+    const result = await uploadPhoto(file);
+    showProductPhoto(result.url);
+    message('Fotka je nahraná. Nezabudni produkt uložiť.', 'success');
+  } catch (error) {
+    message(error.message, 'error');
+  } finally {
+    photoInput.value = '';
+  }
+});
+removePhoto.addEventListener('click', () => showProductPhoto(''));
+
 function resetForm() {
   form.reset();
+  showProductPhoto('');
   form.elements.id.value = '';
   form.elements.status.value = 'draft';
   delete form.elements.slug.dataset.edited;
@@ -135,6 +187,7 @@ list.addEventListener('click', (event) => {
   if (!product) return;
   form.elements.id.value = product.id;
   for (const key of ['name', 'slug', 'category', 'material', 'dimensions', 'price_text', 'availability_text', 'image_url', 'description', 'status']) form.elements[key].value = product[key] || '';
+  showProductPhoto(product.image_url || '');
   try { form.elements.variants.value = JSON.parse(product.variants_json || '[]').join('\n'); } catch { form.elements.variants.value = ''; }
   form.elements.notes.value = '';
   form.elements.slug.dataset.edited = 'true';
@@ -189,5 +242,64 @@ inquiryList.addEventListener('click', async (event) => {
   }
 });
 
+const showcaseForm = document.querySelector('#showcase-form');
+const showcaseList = document.querySelector('#showcase-list');
+const showcaseCount = document.querySelector('#showcase-count');
+let showcase = [];
+
+function renderShowcase() {
+  showcaseCount.textContent = String(showcase.filter((item) => item.status === 'published').length);
+  if (!showcase.length) {
+    showcaseList.innerHTML = '<p class="empty-list">Zatiaľ tu nie sú žiadne ukážky. Kým nejakú pridáš, sekcia sa na úvodnej stránke nezobrazí.</p>';
+    return;
+  }
+  showcaseList.innerHTML = showcase.map((item) => `<article class="showcase-item ${escapeHtml(item.status)}"><img src="${escapeHtml(item.image_url)}" alt="" loading="lazy"><div><p>${escapeHtml(item.title) || '<i>Bez popisu</i>'}</p><span class="status-pill ${item.status === 'published' ? 'published' : 'archived'}">${item.status === 'published' ? 'Na webe' : 'Skrytá'}</span><div class="product-row-actions"><button class="edit-button" type="button" data-showcase="${escapeHtml(item.id)}" data-status="${item.status === 'published' ? 'hidden' : 'published'}">${item.status === 'published' ? 'Skryť' : 'Zobraziť'}</button><button class="edit-button" type="button" data-showcase-delete="${escapeHtml(item.id)}">Odstrániť</button></div></div></article>`).join('');
+}
+
+async function loadShowcase() {
+  try {
+    const result = await request('/api/admin/showcase');
+    showcase = result.items || [];
+    renderShowcase();
+  } catch (error) {
+    showcaseList.innerHTML = `<p class="empty-list">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+showcaseForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const file = showcaseForm.elements.photo.files[0];
+  if (!file) return;
+  const submit = showcaseForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  message('Zmenšujem a nahrávam ukážku…');
+  try {
+    const image = await uploadPhoto(file);
+    await request('/api/admin/showcase', { method: 'POST', body: JSON.stringify({ image_id: image.id, title: showcaseForm.elements.title.value }) });
+    showcaseForm.reset();
+    message('Ukážka je pridaná na úvodnú stránku.', 'success');
+    await loadShowcase();
+  } catch (error) {
+    message(error.message, 'error');
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+showcaseList.addEventListener('click', async (event) => {
+  const toggle = event.target.closest('[data-showcase]');
+  const remove = event.target.closest('[data-showcase-delete]');
+  if (!toggle && !remove) return;
+  if (remove && !window.confirm('Naozaj odstrániť túto ukážku aj s fotkou?')) return;
+  try {
+    if (toggle) await request(`/api/admin/showcase/${encodeURIComponent(toggle.dataset.showcase)}`, { method: 'PUT', body: JSON.stringify({ status: toggle.dataset.status }) });
+    else await request(`/api/admin/showcase/${encodeURIComponent(remove.dataset.showcaseDelete)}`, { method: 'DELETE' });
+    await loadShowcase();
+  } catch (error) {
+    message(error.message, 'error');
+  }
+});
+
 loadProducts();
 loadInquiries();
+loadShowcase();
