@@ -24,8 +24,20 @@ function getKeySet(issuer) {
   return keySet;
 }
 
+// Local-only admin: enabled by `npm run admin`, never set in wrangler.jsonc or Cloudflare.
+function isLocalAdmin(request, env) {
+  if (env.ADMIN_LOCAL_MODE !== 'true') return false;
+  const { hostname } = new URL(request.url);
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
+  if (isLocalAdmin(request, env)) {
+    context.data.adminIdentity = { email: 'local-admin' };
+    return context.next();
+  }
+
   if (!env.CF_ACCESS_TEAM_DOMAIN || !env.CF_ACCESS_AUD || !env.ADMIN_EMAILS) {
     return reply(503, 'admin_access_not_configured');
   }

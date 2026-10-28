@@ -5,7 +5,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && wrangler pages dev ./dist",
-    "deploy": "npm run build && wrangler pages deploy ./dist"
+    "deploy": "npm run build && wrangler pages deploy ./dist",
+    "admin": "npm run build && wrangler pages dev ./dist --ip 127.0.0.1 --port 8788 --binding ADMIN_LOCAL_MODE=true"
   },
   "devDependencies": {
     "jose": "^6.1.0",

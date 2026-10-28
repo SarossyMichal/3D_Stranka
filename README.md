@@ -42,7 +42,7 @@ Košík je iba lokálna ukážka. Platby, doprava, fakturácia, sklad, objednáv
 
 ## Vzhľad a vyhľadateľnosť
 
-Web automaticky preberá svetlý alebo tmavý režim podľa nastavenia zariadenia. Po nasadení Cloudflare funkcie vytvoria `robots.txt` a sitemapu vrátane publikovaných produktov. Verejné stránky budú môcť indexovať vyhľadávače; samotné umiestnenie vo výsledkoch ani rýchlosť indexácie nemožno zaručiť. Administrácia aj admin API sú z indexovania vylúčené a treba ich chrániť Cloudflare Accessom. Po výbere domény odošli sitemapu do Google Search Console alebo Bing Webmaster Tools.
+Web automaticky preberá svetlý alebo tmavý režim podľa nastavenia zariadenia. Po nasadení Cloudflare funkcie vytvoria `robots.txt` a sitemapu vrátane publikovaných produktov. Verejné stránky budú môcť indexovať vyhľadávače; samotné umiestnenie vo výsledkoch ani rýchlosť indexácie nemožno zaručiť. Administrácia aj admin API sú z indexovania vylúčené a na verejnom webe vypnuté. Po výbere domény odošli sitemapu do Google Search Console alebo Bing Webmaster Tools.
 
 ## Správca produktov s Grok AI
 
@@ -64,26 +64,29 @@ Projekt je pripravený na Cloudflare Pages Functions. Verejný web sa pri zostav
 
 Samotné HTML môžeš naďalej otvárať priamo alebo cez Python server. Cloudflare funkcie sa však spustia len cez Wrangler.
 
-### Čo je pripravené a čo ešte chýba
+### Správa produktov len vo vlastnom počítači
 
-- `wrangler.jsonc` nastavuje Cloudflare Pages a výstup `dist/`.
+Administrácia na verejnom webe je vypnutá: `/admin`, `/admin.html` aj `/api/admin/*` vracajú chybu `admin_access_not_configured`. Produkty spravuješ iba vo svojom počítači, pričom sa ukladajú priamo do živej D1 databázy na Cloudflare.
+
+1. Prvýkrát sa prihlás: `npx wrangler login` (otvorí prehliadač, karta nie je potrebná).
+2. Grok kľúč vlož do ignorovaného súboru `.dev.vars` (skopíruj ho z `.dev.vars.example`) do riadku `XAI_API_KEY=`. Kľúč nikdy nevkladaj do GitHubu ani do Cloudflare.
+3. Spusti `npm run admin` a otvor `http://localhost:8788/admin`.
+4. Po skončení zastav príkaz klávesmi `Ctrl+C`.
+
+Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE`) a funguje len na adrese `localhost` / `127.0.0.1`. Server počúva iba na tvojom počítači, nie v sieti.
+
+### Čo je pripravené
+
+- `wrangler.jsonc` nastavuje Cloudflare Pages, výstup `dist/` a živú D1 databázu `tvoj-vytlacok` (aj pri lokálnom spustení).
 - `functions/api/health.js` ukáže, či sú databáza, Access a AI serverové nastavenia pripojené. Nezobrazuje ich hodnoty.
-- `functions/api/admin/` je chránené overením Cloudflare Access JWT aj zoznamom povolených e-mailov. Bez správneho nastavenia API zamietne prístup.
-- V Cloudflare Access chráň cesty `/admin`, `/admin.html` a `/api/admin/*`; povoľ len svoj e-mail.
-- `migrations/0001_catalog.sql` vytvára tabuľky produktov, FAQ a návrhov; `0002_product_fields.sql` dopĺňa obrázok, materiál a rozmery produktu.
+- `functions/api/admin/` pustí požiadavky iba v lokálnom režime, alebo ak by si neskôr zapol Cloudflare Access (overenie JWT a zoznam povolených e-mailov). Inak prístup zamietne.
+- `migrations/0001_catalog.sql` vytvára tabuľky produktov, FAQ a návrhov; `0002_product_fields.sql` dopĺňa obrázok, materiál a rozmery produktu. Obe sú už v živej databáze.
 - `functions/api/admin/generate-description.js` volá Grok cez `XAI_API_KEY`, predvolene používa `grok-4.3` a obmedzuje dĺžku odpovede. Odpoveď sa neukladá do databázy, kým ju ty neuložíš.
 - `functions/robots.txt.js` a `functions/sitemap.xml.js` vytvárajú indexačné súbory pre doménu, na ktorej je web spustený.
-- `.dev.vars.example` obsahuje len zástupné hodnoty. Nikdy doň nevkladaj skutočný API kľúč; vlastné lokálne hodnoty patria do ignorovaného súboru `.dev.vars`.
-
-Cloudflare účet, projekt, D1, Access a doména ešte nie sú nastavené. Kým ich nepripojíš, administrácia zobrazí hlásenie, že služby nie sú pripravené. Verejný chatbot nie je súčasťou tejto verzie.
+- `.dev.vars.example` obsahuje len zástupné hodnoty. Vlastné lokálne hodnoty patria do ignorovaného súboru `.dev.vars`.
 
 ### Nasadenie
 
-1. Vytvor Cloudflare Pages projekt s názvom `tvoj-vytlacok` a pripoj GitHub repozitár. Nastav build command `npm run build` a výstupný priečinok `dist`.
-2. Vytvor D1: `npx wrangler d1 create tvoj-vytlacok`. Jej ID vlož do väzby `DB` v `wrangler.jsonc`.
-3. Aplikuj databázové migrácie: `npx wrangler d1 migrations apply tvoj-vytlacok --remote`.
-4. Ulož Grok kľúč ako tajomstvo: `npx wrangler pages secret put XAI_API_KEY --project-name tvoj-vytlacok`. Wrangler si ho vypýta; nevkladaj kľúč do súboru v repozitári.
-5. V Cloudflare Access chráň `/admin`, `/admin.html` a `/api/admin/*`, povoľ svoju e-mailovú adresu a pridaj vlastnú doménu.
-6. Keď je D1 a Access nastavený, nasaď web cez GitHub Pages build alebo `npm run deploy`. Potom otvor `https://tvoja-domena.sk/api/health`, `https://tvoja-domena.sk/robots.txt` a sitemapu.
+Web beží na `https://tvoj-vytlacok.pages.dev` a Cloudflare ho automaticky znova nasadí po každom pushnutí do vetvy `main` na GitHube (build `npm run build`, výstup `dist`). Nové databázové migrácie aplikuj príkazom `npx wrangler d1 migrations apply tvoj-vytlacok --remote`.
 
-Nič nebolo nasadené a skutočné objednávky, platby, doprava ani fakturácia nie sú aktívne.
+Skutočné objednávky, platby, doprava ani fakturácia nie sú aktívne.
