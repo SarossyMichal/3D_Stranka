@@ -283,3 +283,6 @@ h3{font-stretch:90%;font-weight:700;letter-spacing:-.005em}
 /* Na kartóne je pečiatková červená tmavšia, aby mala dosť kontrastu. */
 .footer-badge{border-color:#8a1c10;color:#8a1c10}
 .footer-main a:hover{color:#8a1c10}
+.label-note{margin:22px 0 0;font:500 14px var(--mono);color:var(--ink-soft);max-width:34ch}
+.contact-details p a{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.contact-details p a:hover{color:var(--stamp)}
