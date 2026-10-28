@@ -6,6 +6,5 @@
   "vars": {
     "XAI_MODEL": "grok-4.3"
   },
-  // Po vytvorení D1 databázy vlož jej ID a odkomentuj väzbu:
-  // "d1_databases": [{ "binding": "DB", "database_name": "tvoj-vytlacok", "database_id": "SEM_VLOZ_ID" }]
+  "d1_databases": [{ "binding": "DB", "database_name": "tvoj-vytlacok", "database_id": "a3e275e3-c410-4270-a9d4-f9cf31fd52f3" }]
 }
