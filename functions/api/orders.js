@@ -105,7 +105,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const items = lines.map((line) => {
       const product = products.get(line.id);
       if (!product) throw new OrderError('Niektorý produkt v košíku už nie je v ponuke. Obnovte stránku košíka.', 409);
-      if (!Number.isInteger(product.price_cents) || product.price_cents <= 0) throw new OrderError(`Produkt „${product.name}“ sa zatiaľ nedá objednať online. Pošlite nám dopyt.`, 409);
+      // Without a price or a stock count we can't promise the item, so it goes through an inquiry instead.
+      if (!Number.isInteger(product.price_cents) || product.price_cents <= 0 || !Number.isInteger(product.stock)) throw new OrderError(`Produkt „${product.name}“ sa zatiaľ nedá objednať online. Pošlite nám dopyt.`, 409);
       let variants = [];
       try { variants = JSON.parse(product.variants_json || '[]'); } catch { variants = []; }
       if (variants.length && !variants.includes(line.variant)) throw new OrderError(`Vyberte variant pre „${product.name}“.`);
@@ -117,18 +118,16 @@ export async function onRequestPost({ request, env, waitUntil }) {
     for (const item of items) qtyById.set(item.id, (qtyById.get(item.id) || 0) + item.qty);
     for (const [id, qty] of qtyById) {
       const product = products.get(id);
-      if (product.stock !== null && product.stock < qty) {
+      if (product.stock < qty) {
         throw new OrderError(product.stock > 0 ? `Produkt „${product.name}“ máme na sklade už len ${product.stock} ks.` : `Produkt „${product.name}“ je už vypredaný.`, 409);
       }
     }
 
-    // Reserve stock only for products we track; the WHERE keeps two parallel orders from overselling.
-    const tracked = [...qtyById].filter(([id]) => products.get(id).stock !== null);
-    if (tracked.length) {
-      const results = await db.batch(tracked.map(([id, qty]) => db.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?').bind(qty, id, qty)));
-      taken = tracked.filter((_, index) => results[index].meta?.changes);
-      if (taken.length !== tracked.length) throw new OrderError('Medzitým niekto kúpil posledné kusy. Obnovte stránku košíka.', 409);
-    }
+    // Reserve the pieces; the WHERE keeps two parallel orders from overselling.
+    const wanted = [...qtyById];
+    const results = await db.batch(wanted.map(([id, qty]) => db.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?').bind(qty, id, qty)));
+    taken = wanted.filter((_, index) => results[index].meta?.changes);
+    if (taken.length !== wanted.length) throw new OrderError('Medzitým niekto kúpil posledné kusy. Obnovte stránku košíka.', 409);
 
     const itemsCents = items.reduce((sum, item) => sum + item.price_cents * item.qty, 0);
     const order = {

@@ -79,7 +79,7 @@ Fotky sa nahrávajú priamo v admine: pri produkte tlačidlom **Vybrať fotku** 
 
 ### Objednávky na dobierku
 
-Košík (`kosik.html`, `kosik.js`) posiela objednávky na `/api/orders`. Server prepočíta ceny z databázy, skontroluje sklad a kusy odpočíta (migrácia `0005_orders.sql` pridala `price_cents`, `stock` a tabuľku `orders`). Produkt s 0 kusmi sa v e-shope nezobrazí; prázdny sklad znamená výrobu na objednávku bez limitu. Zrušenie objednávky v admine vráti kusy na sklad.
+Košík (`kosik.html`, `kosik.js`) posiela objednávky na `/api/orders`. Server prepočíta ceny z databázy, skontroluje sklad a kusy odpočíta (migrácia `0005_orders.sql` pridala `price_cents`, `stock` a tabuľku `orders`). Online sa dá objednať iba produkt s cenou aj počtom kusov na sklade; produkt bez počtu kusov ukáže tlačidlo „Opýtať sa“ a admin ho bez počtu kusov neuloží. Produkt s 0 kusmi sa v e-shope nezobrazí. Zrušenie objednávky v admine vráti kusy na sklad.
 
 Ceny dopravy a dobierky sú v `functions/api/_shop.js`.
 
@@ -111,3 +111,7 @@ Lokálny režim zapína iba príkaz `npm run admin` (premenná `ADMIN_LOCAL_MODE
 Web beží na `https://tvoj-vytlacok.pages.dev` a Cloudflare ho automaticky znova nasadí po každom pushnutí do vetvy `main` na GitHube (build `npm run build`, výstup `dist`). Nové databázové migrácie aplikuj príkazom `npx wrangler d1 migrations apply tvoj-vytlacok --remote`.
 
 Skutočné objednávky, platby, doprava ani fakturácia nie sú aktívne.
+
+## Vzhľad
+
+Verejný web má vzhľad „balíkový štítok“ v `stitok.css` (načítava sa posledný, po `styles.css` a `redesign.css`). Písma: Archivo a IBM Plex Mono. Popis produktu a značky je v `PRODUCT.md`.

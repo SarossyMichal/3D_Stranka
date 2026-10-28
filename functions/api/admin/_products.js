@@ -18,6 +18,7 @@ export function readProduct(input) {
 
   if (!name || !slug || !category || !description) throw new Error('Vyplň názov, URL názov, kategóriu a popis.');
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('URL názov môže obsahovať iba malé písmená, čísla a spojovníky.');
+  if (priceCents !== null && stock === null) throw new Error('Pri produkte s cenou zadaj, koľko kusov máš na sklade. Bez toho sa nedá objednať.');
   if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('https://')) throw new Error('Obrázok musí mať adresu HTTPS alebo cestu od koreňa webu.');
 
   return {

@@ -59,8 +59,8 @@ function cleanCart() {
   const next = [];
   for (const entry of cart) {
     const product = cartProducts.get(entry.id);
-    if (!product || !Number.isInteger(product.price_cents)) continue;
-    const left = Number.isInteger(product.stock) ? product.stock - (used.get(entry.id) || 0) : Infinity;
+    if (!product || !isOrderable(product)) continue;
+    const left = product.stock - (used.get(entry.id) || 0);
     const qty = Math.min(entry.qty, left);
     if (qty < 1) continue;
     used.set(entry.id, (used.get(entry.id) || 0) + qty);
@@ -101,8 +101,8 @@ function renderCheckout() {
     const href = `produkt.html?slug=${encodeURIComponent(product.slug)}`;
     const thumb = product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="" width="88" height="88" loading="lazy" decoding="async">` : '<span class="cart-thumb-empty" aria-hidden="true">3D</span>';
     const inCart = cart.filter((item) => item.id === entry.id).reduce((sum, item) => sum + item.qty, 0);
-    const atLimit = Number.isInteger(product.stock) && inCart >= product.stock;
-    const stock = Number.isInteger(product.stock) ? `<span class="cart-stock">Na sklade ${product.stock} ks</span>` : '';
+    const atLimit = inCart >= product.stock;
+    const stock = `<span class="cart-stock">Na sklade ${product.stock} ks</span>`;
     return `<li class="cart-line"><a class="cart-line-thumb" href="${escapeHtml(href)}" tabindex="-1">${thumb}</a>
       <div class="cart-line-info"><a href="${escapeHtml(href)}"><b>${escapeHtml(product.name)}</b></a>${entry.variant ? `<span>Variant: ${escapeHtml(entry.variant)}</span>` : ''}<span>${formatEuro(product.price_cents)} / ks</span>${stock}</div>
       <div class="cart-line-qty" role="group" aria-label="Počet kusov: ${escapeHtml(product.name)}"><button type="button" data-step="-1" data-line="${index}" aria-label="Ubrať jeden kus">−</button><span aria-live="polite">${entry.qty}</span><button type="button" data-step="1" data-line="${index}" aria-label="Pridať jeden kus"${atLimit ? ' disabled' : ''}>+</button></div>

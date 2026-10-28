@@ -53,7 +53,7 @@ function renderProducts() {
     list.innerHTML = '<p class="empty-list">Zatiaľ tu nie je žiadny produkt. Začni formulárom.</p>';
     return;
   }
-  list.innerHTML = products.map((product) => `<article class="product-row"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.category)} · ${Number.isInteger(product.price_cents) ? formatEuro(product.price_cents) : 'cena na dopyt'} · ${Number.isInteger(product.stock) ? `${product.stock} ks${product.stock === 0 ? ' (vypredané)' : ''}` : 'na objednávku'}</p></div><div class="product-row-actions"><span class="status-pill ${escapeHtml(product.status)}">${statusName(product.status)}</span><button class="edit-button" type="button" data-edit="${escapeHtml(product.id)}">Upraviť</button></div></article>`).join('');
+  list.innerHTML = products.map((product) => `<article class="product-row"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.category)} · ${Number.isInteger(product.price_cents) ? formatEuro(product.price_cents) : 'cena na dopyt'} · ${Number.isInteger(product.stock) ? `${product.stock} ks${product.stock === 0 ? ' (vypredané)' : ''}` : (Number.isInteger(product.price_cents) ? 'chýba počet kusov – nedá sa objednať' : 'bez počtu kusov')}</p></div><div class="product-row-actions"><span class="status-pill ${escapeHtml(product.status)}">${statusName(product.status)}</span><button class="edit-button" type="button" data-edit="${escapeHtml(product.id)}">Upraviť</button></div></article>`).join('');
 }
 
 function escapeHtml(value) {

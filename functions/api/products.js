@@ -1,5 +1,5 @@
 function json(data, status = 200) {
-  return Response.json(data, { status, headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300' } });
+  return Response.json(data, { status, headers: { 'Cache-Control': 'public, max-age=15, s-maxage=30' } });
 }
 
 export async function onRequestGet({ request, env }) {
