@@ -16,7 +16,7 @@ export async function notifyNewOrder(env, order) {
     '',
     `${order.name}, ${order.email}, ${order.phone}`,
     `${order.street}, ${order.zip} ${order.city}`,
-    order.pickup_point ? `Výdajné miesto: ${order.pickup_point}` : '',
+    order.pickup_point ? `Výdajné miesto: ${order.pickup_point}${order.pickup_point_id ? ` (ID ${order.pickup_point_id})` : ''}` : '',
     order.note ? `Poznámka: ${order.note}` : '',
     '',
     'Podrobnosti nájdeš v admine (npm run admin).',

@@ -83,6 +83,8 @@ Košík (`kosik.html`, `kosik.js`) posiela objednávky na `/api/orders`. Server 
 
 Ceny dopravy a dobierky sú v `functions/api/_shop.js`.
 
+Mapa výdajných miest Packety sa v košíku zapne, keď do `wrangler.jsonc` pod `vars` doplníš `"PACKETA_API_KEY": "tvoj-kľúč"` (kľúč nájdeš v klientskej sekcii Packety). Kľúč pre mapu je verejný, preto môže byť v repozitári. Bez neho zákazník vpíše výdajné miesto ručne. K objednávke sa ukladá aj ID výdajného miesta (migrácia `0006_pickup_point_id.sql`).
+
 E-mail o novej objednávke posiela služba [Resend](https://resend.com) (bezplatný účet, bez karty). V Cloudflare nastav dve tajomstvá:
 
 ```

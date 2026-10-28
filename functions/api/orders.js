@@ -29,6 +29,7 @@ function readCustomer(value) {
     zip: clean(value.zip, 12).replace(/\s+/g, ''),
     note: clean(value.note, 1000),
     pickup_point: clean(value.pickup_point, 200),
+    pickup_point_id: clean(value.pickup_point_id, 20).replace(/\D/g, ''),
   };
   if (!customer.name || !customer.email || !customer.phone || !customer.street || !customer.city || !customer.zip) {
     throw new OrderError('Vyplňte meno, e-mail, telefón a celú adresu.');
@@ -83,7 +84,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const shipping = SHIPPING_METHODS.find((method) => method.id === input?.shipping);
     if (!shipping) throw new OrderError('Vyberte spôsob dopravy.');
     if (shipping.pickup && !customer.pickup_point) throw new OrderError('Napíšte, na ktoré výdajné miesto Packety máme balík poslať.');
-    if (!shipping.pickup) customer.pickup_point = '';
+    if (!shipping.pickup) {
+      customer.pickup_point = '';
+      customer.pickup_point_id = '';
+    }
     if (input?.consent !== true) throw new OrderError('Potvrďte súhlas so spracovaním údajov na vybavenie objednávky.');
 
     const hash = await clientHash(request);
@@ -140,11 +144,11 @@ export async function onRequestPost({ request, env, waitUntil }) {
       total_cents: itemsCents + shipping.price_cents + COD_FEE_CENTS,
     };
 
-    await db.prepare(`INSERT INTO orders (id, number, name, email, phone, street, city, zip, shipping_method, shipping_label, pickup_point, note,
+    await db.prepare(`INSERT INTO orders (id, number, name, email, phone, street, city, zip, shipping_method, shipping_label, pickup_point, pickup_point_id, note,
         items_json, items_cents, shipping_cents, cod_cents, total_cents, client_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(order.id, order.number, order.name, order.email, order.phone, order.street, order.city, order.zip, order.shipping_method, order.shipping_label,
-        order.pickup_point, order.note, JSON.stringify(items), order.items_cents, order.shipping_cents, order.cod_cents, order.total_cents, hash).run();
+        order.pickup_point, order.pickup_point_id, order.note, JSON.stringify(items), order.items_cents, order.shipping_cents, order.cod_cents, order.total_cents, hash).run();
 
     waitUntil(notifyNewOrder(env, order));
     return json({ number: order.number, total_cents: order.total_cents }, 201);

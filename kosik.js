@@ -6,7 +6,45 @@ const pickupField = document.querySelector('#pickup-field');
 const summary = document.querySelector('#order-summary');
 const checkoutFeedback = document.querySelector('#checkout-feedback');
 let cartProducts = new Map();
-let shop = { shipping: [], cod_fee_cents: 0 };
+let shop = { shipping: [], cod_fee_cents: 0, packeta_api_key: '' };
+const packetaButton = document.querySelector('#packeta-pick');
+let packetaLoading = null;
+
+function loadPacketa() {
+  packetaLoading ||= new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://widget.packeta.com/v6/www/js/library.js';
+    script.onload = resolve;
+    script.onerror = () => { packetaLoading = null; reject(new Error('Mapu Packety sa nepodarilo načítať.')); };
+    document.head.append(script);
+  });
+  return packetaLoading;
+}
+
+// With a Packeta API key the customer picks the point on Packeta's map; without it they type it in.
+function setupPacketa() {
+  if (!shop.packeta_api_key) return;
+  const input = checkoutForm.elements.pickup_point;
+  packetaButton.hidden = false;
+  input.readOnly = true;
+  input.placeholder = 'Zatiaľ nevybraté';
+  document.querySelector('#pickup-hint').textContent = 'Kliknite na tlačidlo a vyberte výdajné miesto alebo Z-BOX na mape.';
+  input.addEventListener('click', () => packetaButton.click());
+}
+
+packetaButton.addEventListener('click', async () => {
+  try {
+    await loadPacketa();
+    Packeta.Widget.pick(shop.packeta_api_key, (point) => {
+      if (!point) return;
+      checkoutForm.elements.pickup_point.value = point.formatedValue || [point.name, point.street, point.zip, point.city].filter(Boolean).join(', ');
+      checkoutForm.elements.pickup_point_id.value = String(point.id || '');
+      packetaButton.textContent = 'Zmeniť výdajné miesto';
+    }, { country: 'sk', language: 'sk', appIdentity: 'tvoj-vytlacok' });
+  } catch (error) {
+    checkoutFeedback.textContent = error.message;
+  }
+});
 
 const saveCart = (cart) => {
   localStorage.setItem(CART_KEY, JSON.stringify(cart.filter((item) => item.qty > 0)));
@@ -96,6 +134,12 @@ checkoutForm.addEventListener('change', (event) => {
 checkoutForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!checkoutForm.reportValidity()) return;
+  // A read-only field skips the browser's required check, so check the map choice here.
+  if (selectedShipping()?.pickup && !checkoutForm.elements.pickup_point.value.trim()) {
+    checkoutFeedback.textContent = 'Vyberte výdajné miesto Packety.';
+    (shop.packeta_api_key ? packetaButton : checkoutForm.elements.pickup_point).focus();
+    return;
+  }
   const cart = cleanCart();
   if (!cart.length) return renderCheckout();
   const data = Object.fromEntries(new FormData(checkoutForm));
@@ -111,7 +155,7 @@ checkoutForm.addEventListener('submit', async (event) => {
         shipping: data.shipping,
         consent: checkoutForm.elements.consent.checked,
         website: data.website,
-        customer: { name: data.name, email: data.email, phone: data.phone, street: data.street, city: data.city, zip: data.zip, note: data.note, pickup_point: data.pickup_point },
+        customer: { name: data.name, email: data.email, phone: data.phone, street: data.street, city: data.city, zip: data.zip, note: data.note, pickup_point: data.pickup_point, pickup_point_id: data.pickup_point_id },
       }),
     });
     const result = await response.json().catch(() => ({}));
@@ -137,6 +181,7 @@ async function loadCheckout() {
     shop = await shopResponse.json();
     cartProducts = new Map(products.map((product) => [product.id, product]));
     shippingBox.innerHTML = shop.shipping.map((method) => `<label class="shipping-option"><input type="radio" name="shipping" value="${escapeHtml(method.id)}" required><span>${escapeHtml(method.label)}</span><b>${formatEuro(method.price_cents)}</b></label>`).join('');
+    setupPacketa();
     renderCheckout();
   } catch {
     cartPanel.innerHTML = '<div class="cart-empty-state"><h2>Košík sa nepodarilo načítať.</h2><p>Skúste obnoviť stránku.</p></div>';

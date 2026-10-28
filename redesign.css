@@ -305,3 +305,4 @@ body{background:#fff;color:#10213a}
 .detail-price{font-size:26px!important;margin:18px 0 10px!important}.detail-status{font-size:13px!important;letter-spacing:.02em!important;padding:8px 12px!important}.detail-field{font-size:15px!important}.detail-field select{font-size:16px!important;min-height:48px}.detail-add{min-height:52px;font-size:16px;margin-top:8px}.detail-honesty{font-size:14px!important}.detail-honesty a{color:inherit;font-weight:700}
 .checkout-field[hidden]{display:none}.checkout-row{clear:both}.checkout-row .checkout-field{min-width:0}
 .cart-line-qty button{flex:none;min-width:44px}
+.packeta-pick{justify-self:start;min-height:48px;font-size:16px}.checkout-field label{font-weight:600}
