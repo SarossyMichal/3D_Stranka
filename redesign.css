@@ -241,3 +241,6 @@ body{background:#fff;color:#10213a}
  .footer-badge{background:#101d30}
  html{scrollbar-color:#425875 #0b1422}
 }
+
+/* Dynamické produkty z administračného katalógu */
+.product-image img,.cart-thumb img{width:100%;height:100%;object-fit:cover;border-radius:inherit}.product-image:has(img){padding:0}.detail-visual:has(img){overflow:hidden;border-radius:28px}.detail-visual>img{width:100%;height:100%;object-fit:cover}.product-facts{font-size:11px!important}.shop-honesty{margin-top:18px}

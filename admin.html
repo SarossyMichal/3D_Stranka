@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="description" content="Súkromná správa produktov značky tvojVýtlačok.">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Správa produktov | tvojVýtlačok</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Preskočiť na obsah</a>
+  <header class="admin-topbar">
+    <a class="admin-brand" href="index.html"><span class="brand-glyph">3D</span><span>tvoj<span>Výtlačok</span><small>SPRÁVA OBCHODU</small></span></a>
+    <nav aria-label="Navigácia správcu"><a href="obchod.html">Zobraziť obchod ↗</a><a href="index.html">Verejný web</a></nav>
+  </header>
+  <main id="content" class="admin-shell">
+    <section class="welcome-panel">
+      <div><p class="eyebrow">SÚKROMNÁ ADMINISTRÁCIA</p><h1>Produkty,<br><span>po tvojom.</span></h1><p>Pridaj základné fakty, nechaj si pomôcť s textom a skontroluj ho pred zverejnením.</p></div>
+      <div class="welcome-note"><span class="note-icon" aria-hidden="true">✦</span><strong>AI pripraví návrh.</strong><p>Vymyslené údaje sa nepoužijú. Cenu, dostupnosť aj popis pred publikovaním vždy skontroluješ ty.</p></div>
+    </section>
+
+    <div id="admin-message" class="notice" role="status" aria-live="polite">Načítavam produkty…</div>
+
+    <div class="admin-columns">
+      <section class="panel form-panel" aria-labelledby="form-heading">
+        <div class="panel-heading"><div><p class="eyebrow">KATALÓG</p><h2 id="form-heading">Nový produkt</h2></div><button class="text-button" type="button" id="reset-form">＋ Nový</button></div>
+        <form id="product-form">
+          <input type="hidden" name="id">
+          <div class="field-grid">
+            <label class="field field-wide"><span>Názov produktu <b>*</b></span><input name="name" required maxlength="120" autocomplete="off" placeholder="Napríklad: Držiak na slúchadlá"></label>
+            <label class="field"><span>Kategória <b>*</b></span><input name="category" required maxlength="60" placeholder="Napríklad: Doplnky"></label>
+            <label class="field"><span>URL názov <b>*</b></span><input name="slug" required maxlength="90" pattern="[a-zA-Z0-9-]+" placeholder="drziak-na-sluchadla"><small>Vytvorí sa automaticky z názvu.</small></label>
+            <label class="field"><span>Materiál</span><input name="material" maxlength="100" placeholder="Doplň iba ak ho poznáš"></label>
+            <label class="field"><span>Približné rozmery</span><input name="dimensions" maxlength="120" placeholder="Napríklad: 12 × 8 × 5 cm"></label>
+            <label class="field"><span>Cena</span><input name="price_text" maxlength="80" placeholder="Cena na doplnenie"></label>
+            <label class="field"><span>Dostupnosť</span><input name="availability_text" maxlength="100" placeholder="Dostupnosť na potvrdenie"></label>
+            <label class="field field-wide"><span>Varianty <small>každý na samostatný riadok</small></span><textarea name="variants" rows="3" maxlength="500" placeholder="Modrá\nBiela"></textarea></label>
+            <label class="field field-wide"><span>Odkaz na obrázok</span><input name="image_url" type="url" maxlength="500" placeholder="https://…"><small>Nahrávanie obrázkov ešte nie je pripojené. Môžeš vložiť bezpečný https odkaz.</small></label>
+            <label class="field field-wide"><span>Fakty pre Grok <b>*</b></span><textarea name="notes" rows="4" maxlength="2400" placeholder="Na čo výrobok slúži? Čím je zaujímavý? Uveď iba informácie, ktoré vieš potvrdiť." required></textarea><small>Grok použije iba to, čo sem alebo do polí vyššie napíšeš.</small></label>
+            <div class="field field-wide ai-actions"><button id="generate-copy" class="button button-ai" type="button"><span aria-hidden="true">✦</span> Navrhnúť popis s Grokom</button><span id="ai-model-note">Model: grok-4.3 · môže sa meniť podľa nastavenia</span><small>Po kliknutí sa len fakty o produkte odošlú xAI na vytvorenie návrhu.</small></div>
+            <label class="field field-wide"><span>Popis na stránke <b>*</b></span><textarea name="description" rows="6" maxlength="3000" required placeholder="Sem príde AI návrh. Pred uložením ho môžeš upraviť."></textarea></label>
+            <label class="field field-wide status-field"><span>Stav</span><select name="status"><option value="draft">Koncept — zatiaľ nezverejnený</option><option value="published">Zverejniť v e-shope</option><option value="archived">Archivovaný</option></select><small>Zverejnený produkt sa zobrazí vo verejnom obchode. Objednávky ešte nie sú aktívne.</small></label>
+          </div>
+          <div class="form-footer"><span>Pole označené * treba vyplniť.</span><button class="button button-primary" type="submit">Uložiť produkt <span aria-hidden="true">↗</span></button></div>
+        </form>
+      </section>
+
+      <aside class="panel catalog-panel" aria-labelledby="catalog-heading">
+        <div class="panel-heading"><div><p class="eyebrow">PREHĽAD</p><h2 id="catalog-heading">Tvoje produkty</h2></div><span id="product-count" class="count-pill">0</span></div>
+        <div id="product-list" class="product-list"><p class="empty-list">Zatiaľ nič tu nie je. Začni formulárom.</p></div>
+        <div class="catalog-footnote"><span aria-hidden="true">🔒</span><p>Produkty ukladáme do tvojej Cloudflare databázy. Kým nie je pripojená, stránka zobrazí návod na nastavenie.</p></div>
+      </aside>
+    </div>
+    <p class="access-note">Táto stránka je určená iba správcovi. Pred zverejnením treba v Cloudflare Access chrániť cestu <code>/admin.html</code> aj <code>/api/admin/*</code>.</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,146 @@
+const form = document.querySelector('#product-form');
+const notice = document.querySelector('#admin-message');
+const list = document.querySelector('#product-list');
+const count = document.querySelector('#product-count');
+const generateButton = document.querySelector('#generate-copy');
+let products = [];
+
+function message(text, kind = '') {
+  notice.textContent = text;
+  notice.dataset.kind = kind;
+}
+
+function formData() {
+  const data = new FormData(form);
+  return {
+    id: String(data.get('id') || ''),
+    name: String(data.get('name') || '').trim(),
+    slug: String(data.get('slug') || '').trim(),
+    category: String(data.get('category') || '').trim(),
+    material: String(data.get('material') || '').trim(),
+    dimensions: String(data.get('dimensions') || '').trim(),
+    price_text: String(data.get('price_text') || '').trim(),
+    availability_text: String(data.get('availability_text') || '').trim(),
+    variants: String(data.get('variants') || '').split('\n').map((item) => item.trim()).filter(Boolean),
+    image_url: String(data.get('image_url') || '').trim(),
+    notes: String(data.get('notes') || '').trim(),
+    description: String(data.get('description') || '').trim(),
+    status: String(data.get('status') || 'draft'),
+  };
+}
+
+function slugify(value) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function statusName(status) {
+  return ({ draft: 'Koncept', published: 'Zverejnený', archived: 'Archív' })[status] || 'Koncept';
+}
+
+function renderProducts() {
+  count.textContent = String(products.length);
+  if (!products.length) {
+    list.innerHTML = '<p class="empty-list">Zatiaľ tu nie je žiadny produkt. Začni formulárom.</p>';
+    return;
+  }
+  list.innerHTML = products.map((product) => `<article class="product-row"><div><h3>${escapeHtml(product.name)}</h3><p>${escapeHtml(product.category)} · ${escapeHtml(product.slug)}</p></div><div class="product-row-actions"><span class="status-pill ${escapeHtml(product.status)}">${statusName(product.status)}</span><button class="edit-button" type="button" data-edit="${escapeHtml(product.id)}">Upraviť</button></div></article>`).join('');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
+async function request(url, options = {}) {
+  const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || `Požiadavka zlyhala (${response.status}).`);
+  return result;
+}
+
+async function loadProducts() {
+  try {
+    const result = await request('/api/admin/products');
+    products = result.products || [];
+    renderProducts();
+    message('Databáza je pripojená. Môžeš pridávať produkty.', 'success');
+  } catch (error) {
+    products = [];
+    renderProducts();
+    message(`${error.message} Pred použitím správcu treba v Cloudflare pripojiť D1, povoliť prístup a nastaviť e-mail správcu.`, 'error');
+  }
+}
+
+function resetForm() {
+  form.reset();
+  form.elements.id.value = '';
+  form.elements.status.value = 'draft';
+  delete form.elements.slug.dataset.edited;
+  document.querySelector('#form-heading').textContent = 'Nový produkt';
+}
+
+form.elements.name.addEventListener('input', () => {
+  if (!form.elements.id.value || !form.elements.slug.dataset.edited) form.elements.slug.value = slugify(form.elements.name.value);
+});
+form.elements.slug.addEventListener('input', () => { form.elements.slug.dataset.edited = 'true'; });
+document.querySelector('#reset-form').addEventListener('click', resetForm);
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const product = formData();
+  const url = product.id ? `/api/admin/products/${encodeURIComponent(product.id)}` : '/api/admin/products';
+  const method = product.id ? 'PUT' : 'POST';
+  const submit = form.querySelector('[type="submit"]');
+  submit.disabled = true;
+  message(product.status === 'published' ? 'Ukladám a zverejňujem produkt…' : 'Ukladám koncept…');
+  try {
+    await request(url, { method, body: JSON.stringify(product) });
+    message(product.status === 'published' ? 'Hotovo. Produkt je zverejnený v obchode.' : 'Hotovo. Produkt je bezpečne uložený ako koncept.', 'success');
+    resetForm();
+    await loadProducts();
+  } catch (error) {
+    message(error.message, 'error');
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+generateButton.addEventListener('click', async () => {
+  const product = formData();
+  if (!product.name || !product.notes) {
+    message('Najprv doplň názov produktu a aspoň krátky opis/fakty.', 'error');
+    form.elements.name.focus();
+    return;
+  }
+  generateButton.disabled = true;
+  generateButton.textContent = 'Grok pripravuje návrh…';
+  message('Posielam stručné fakty Groku na vytvorenie návrhu.');
+  try {
+    const result = await request('/api/admin/generate-description', { method: 'POST', body: JSON.stringify(product) });
+    form.elements.description.value = result.description;
+    document.querySelector('#ai-model-note').textContent = `Použitý model: ${result.model}. Popis skontroluj pred uložením.`;
+    message('Návrh je pripravený. Prečítaj si ho a uprav, čo treba.', 'success');
+    form.elements.description.focus();
+  } catch (error) {
+    message(error.message, 'error');
+  } finally {
+    generateButton.disabled = false;
+    generateButton.innerHTML = '<span aria-hidden="true">✦</span> Navrhnúť popis s Grokom';
+  }
+});
+
+list.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-edit]');
+  if (!button) return;
+  const product = products.find((item) => item.id === button.dataset.edit);
+  if (!product) return;
+  form.elements.id.value = product.id;
+  for (const key of ['name', 'slug', 'category', 'material', 'dimensions', 'price_text', 'availability_text', 'image_url', 'description', 'status']) form.elements[key].value = product[key] || '';
+  try { form.elements.variants.value = JSON.parse(product.variants_json || '[]').join('\n'); } catch { form.elements.variants.value = ''; }
+  form.elements.notes.value = '';
+  form.elements.slug.dataset.edited = 'true';
+  document.querySelector('#form-heading').textContent = 'Upraviť produkt';
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  form.elements.name.focus({ preventScroll: true });
+});
+
+loadProducts();

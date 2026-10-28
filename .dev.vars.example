@@ -3,5 +3,5 @@
 CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
 CF_ACCESS_AUD=replace-after-creating-access-application
 ADMIN_EMAILS=you@example.com
-AI_MODEL=not-selected
-AI_API_KEY=not-configured
+XAI_MODEL=grok-4.3
+XAI_API_KEY=not-configured

@@ -3,7 +3,8 @@ export async function onRequestGet({ env, data }) {
     authenticated: true,
     email: data.adminIdentity.email,
     databaseConfigured: Boolean(env.DB),
-    assistantConfigured: Boolean(env.AI_API_KEY && env.AI_MODEL),
+    assistantConfigured: Boolean(env.XAI_API_KEY && env.XAI_API_KEY !== 'not-configured'),
+    model: env.XAI_MODEL || 'grok-4.3',
   }, {
     headers: { 'Cache-Control': 'no-store' },
   });

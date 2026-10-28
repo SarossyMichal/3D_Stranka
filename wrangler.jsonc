@@ -2,5 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tvoj-vytlacok",
   "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-10-28"
+  "compatibility_date": "2026-10-28",
+  "vars": {
+    "XAI_MODEL": "grok-4.3"
+  },
+  // Po vytvorení D1 databázy vlož jej ID a odkomentuj väzbu:
+  // "d1_databases": [{ "binding": "DB", "database_name": "tvoj-vytlacok", "database_id": "SEM_VLOZ_ID" }]
 }
