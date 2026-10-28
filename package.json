@@ -1,0 +1,14 @@
+{
+  "name": "tvoj-vytlacok",
+  "private": true,
+  "description": "Statický web tvojVýtlačok pripravený pre Cloudflare Pages.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && wrangler pages dev ./dist",
+    "deploy": "npm run build && wrangler pages deploy ./dist"
+  },
+  "devDependencies": {
+    "jose": "^6.1.0",
+    "wrangler": "^4.0.0"
+  }
+}

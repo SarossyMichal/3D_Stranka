@@ -1,0 +1,7 @@
+# Ukážkové hodnoty pre lokálne skúšanie. Skopíruj do .dev.vars a až tam doplň vlastné nastavenia.
+# Súbor .dev.vars sa ignoruje Gitom a nikdy doň neukladaj hodnoty do verejných súborov.
+CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+CF_ACCESS_AUD=replace-after-creating-access-application
+ADMIN_EMAILS=you@example.com
+AI_MODEL=not-selected
+AI_API_KEY=not-configured
