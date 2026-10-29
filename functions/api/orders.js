@@ -63,6 +63,8 @@ async function restoreStock(db, taken) {
 }
 
 export async function onRequestPost({ request, env, waitUntil }) {
+  // Online ordering is switched off until the shop has a registered seller; the cart version is kept in the git tag eshop-s-kosikom.
+  if (env.ORDERS_ENABLED !== 'true') return json({ error: 'Online objednávky sú vypnuté. Pošlite nám dopyt pri produkte alebo napíšte na Instagram @tvojvytlacok.' }, 410);
   if (!env.DB) return json({ error: 'Objednávky sú dočasne nedostupné. Skúste to neskôr.' }, 503);
   const db = env.DB;
 

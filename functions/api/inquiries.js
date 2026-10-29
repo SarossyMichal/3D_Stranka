@@ -1,5 +1,6 @@
 import { clean, noStoreHeaders } from './admin/_products.js';
 import { clientHash } from './_shop.js';
+import { notifyNewInquiry } from './_notify.js';
 
 const maxBodyBytes = 16000;
 const perClientHourlyLimit = 5;
@@ -28,7 +29,7 @@ function readInquiry(input) {
   return inquiry;
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   if (!env.DB) return json({ error: 'Formulár je dočasne nedostupný. Skúste to neskôr.' }, 503);
 
   const body = await request.text();
@@ -64,5 +65,6 @@ export async function onRequestPost({ request, env }) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .bind(crypto.randomUUID(), inquiry.name, inquiry.email, inquiry.phone, inquiry.company, inquiry.description, inquiry.quantity, inquiry.dimensions, inquiry.deadline, hash).run();
 
+  waitUntil(notifyNewInquiry(env, inquiry));
   return json({ ok: true }, 201);
 }

@@ -133,6 +133,37 @@ export async function notifyNewOrder(env, order) {
   }
 }
 
+// New inquiry (from dopyt.html or a product's "Mám záujem" form): a short notice to the shop inbox, reply goes to the customer.
+export async function notifyNewInquiry(env, inquiry) {
+  if (!mailConfigured(env)) return;
+  const firstLine = inquiry.description.split('\n')[0].slice(0, 80);
+  const text = [
+    `Nový dopyt od ${inquiry.name}`,
+    '',
+    inquiry.description,
+    '',
+    [inquiry.quantity && `Počet kusov: ${inquiry.quantity}`, inquiry.dimensions && `Rozmery: ${inquiry.dimensions}`, inquiry.deadline && `Termín: ${inquiry.deadline}`].filter(Boolean).join('\n'),
+    `${inquiry.name}, ${inquiry.email}${inquiry.phone ? `, ${inquiry.phone}` : ''}${inquiry.company ? `, ${inquiry.company}` : ''}`,
+    '',
+    'Odpoveď na tento e-mail pôjde priamo zákazníkovi.',
+  ].filter((line, index, all) => line !== '' || all[index - 1] !== '').join('\n');
+  let mailer;
+  try {
+    mailer = await connect(env);
+    await mailer.send({
+      from: { name: 'tvojVýtlačok web', email: env.SHOP_EMAIL },
+      to: { name: 'tvojVýtlačok', email: env.SHOP_EMAIL },
+      reply: { name: inquiry.name, email: inquiry.email },
+      subject: `Dopyt: ${firstLine}`,
+      text,
+    });
+  } catch {
+    // The inquiry is already saved in the admin; a failed e-mail must not break the form.
+  } finally {
+    await mailer?.close().catch(() => {});
+  }
+}
+
 // Used by the admin's "send test e-mail" button: sends both e-mails for a sample order to the shop's own inbox.
 export async function sendTestMail(env) {
   const sample = {

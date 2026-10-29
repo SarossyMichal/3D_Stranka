@@ -114,3 +114,16 @@ Skutočné objednávky, platby, doprava ani fakturácia nie sú aktívne.
 ## Vzhľad
 
 Verejný web má vzhľad „balíkový štítok“ v `stitok.css` (načítava sa posledný, po `styles.css` a `redesign.css`). Písma: Archivo a IBM Plex Mono. Popis produktu a značky je v `PRODUCT.md`.
+
+## Predaj cez dopyt (od 29. 10. 2026)
+
+Košík a online objednávky sú vypnuté. Pri každom produkte je tlačidlo „Mám záujem“ s formulárom
+(ide do `/api/inquiries`, uloží sa do adminu a príde e-mail na `SHOP_EMAIL`) a odkaz na Instagram
+@tvojvytlacok. `/api/orders` vracia 410, kým v Cloudflare nie je premenná `ORDERS_ENABLED=true`.
+
+Celá verzia s košíkom, dobierkou a obchodnými podmienkami je uložená v git značke `eshop-s-kosikom`:
+
+    git show eshop-s-kosikom --stat
+    git checkout eshop-s-kosikom -- kosik.html kosik.js obchodne-podmienky.html reklamacny-poriadok.html
+
+Pred jej vrátením treba mať predávajúceho so živnosťou a doplniť jeho údaje do podmienok.
